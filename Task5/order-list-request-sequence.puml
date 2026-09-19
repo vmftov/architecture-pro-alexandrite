@@ -1,0 +1,39 @@
+@startuml Чтение списка заказов (Cache-Aside)
+skinparam actorStyle awesome
+
+title
+  <b>Чтение списка заказов (Cache-Aside)</b>
+end title
+
+actor "Operator" as operator 
+
+participant mes [
+    =MES
+]
+
+participant mes_api [
+    =MES API
+]
+
+participant redis [
+    =Redis
+]
+
+participant mes_db [
+    =MES DB
+]
+
+operator    -> mes          : открытие страницы с заказами 
+mes         -> mes_api      : запрос страницы списка с фильтрами
+mes_api     -> redis        : получение страницы списка по композитному ключу 
+alt cache hit
+redis       -> mes_api      : материализованное представление 
+else cache miss
+mes_api     -> mes_db       : выполнение запроса в БД 
+mes_db      -> mes_api      : возврат данных
+mes_api     -> redis        : сохранение данных по композитному ключу 
+end
+mes_api     -> mes          : список заказов 
+mes         -> operator     : список заказов 
+
+@enduml
