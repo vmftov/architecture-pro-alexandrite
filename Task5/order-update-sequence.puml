@@ -1,0 +1,38 @@
+@startuml Обновление статуса заказа (Cache-Aside)
+skinparam actorStyle awesome
+
+title
+  <b>Обновление статуса заказа (Cache-Aside)</b>
+end title
+
+actor "Operator" as operator 
+
+participant mes [
+    =MES
+]
+
+participant mes_api [
+    =MES API
+]
+
+participant redis [
+    =Redis
+]
+
+participant mes_db [
+    =MES DB
+]
+
+operator    -> mes          : обновление статуса заказа
+mes         -> mes_api      : обновление статуса заказа
+mes_api     -> mes_db       : выполнение запроса в БД 
+alt запрос выполнился успешно
+mes_api     -> redis        : инвалидация по композитному ключу 
+mes_api     -> mes          : результат обновления
+mes         -> operator     : результат обновления
+else запрос выполнился с ошибкой
+mes_api     -> mes          : сведения об ошибке
+mes         -> operator     : сведения об ошибке
+end
+
+@enduml
